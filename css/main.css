@@ -4,19 +4,67 @@
    Author's custom styles
    ========================================================================== */
 
+body > .container {
+    min-width: 1140px;
+}
 
+#visualization {
+    perspective: 800px;
+    perspective-origin: 50% 100px;
+}
 
+.visWrap {
+    position: relative;
+    height: 0;
+    padding-bottom: 56.25%;
+    transform-style: preserve-3d;
+    background: #efefef;
+}
 
+.visWrap .donutWrap {
+    position: absolute;
+    left: 0;
+    top: 0;
+    -webkit-transform-origin: top left;
+}
 
+.donutWrap .donut {
+    width: 240px;
+    height: 240px;
+    text-indent: -9999px;
+    background: url("../img/donut_placeholder.png") no-repeat rgba(192,192,192,0.5);
+    background-size: 100% 100%;
+    -webkit-transform: rotateY(-60deg);
+    -webkit-transform-origin: top left;
+}
 
+.visWrap .donutWrap + .donutWrap {
+    opacity: 0.15;
+    -webkit-transform: translateX(120px);
+}
 
+.visWrap .donutWrap + .donutWrap + .donutWrap {
+    opacity: 0.15;
+    -webkit-transform: translateX(240px);
+}
 
+#filters h4 {
+    text-align: center;
+}
 
+#filters .btn-group, #filters .btn-group-vertical {
+    width: 100%;
+}
 
+#filters .btn-group.gender .btn {
+    width: 33.333333333333333333333%;
+}
 
+.btn-group-vertical .btn {
+    text-align: left;
+}
 
-
-
-
-
-
+.btn-group-vertical.categories .btn.btn-xs {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
