@@ -3,7 +3,7 @@
 // (function() {
 
 var fieldsPath = "json/fields.json";
-var dataPath = "json/data.json";
+var dataPath = "json/newdata.json";
 
 var fields, data, svg, $slider;
 var filter = {};
@@ -92,6 +92,9 @@ function initFieldControls(header, controls, values, btnClasses, inputType) {
                     return btnClasses;
                 }
             })
+            .attr("data-background-color", function(d,i) {
+                if (header == "activity") return colors(i);
+            })
             .style("background-color", function(d,i) {
                 if (header == "activity") return colors(i);
             })
@@ -106,6 +109,29 @@ function initFieldControls(header, controls, values, btnClasses, inputType) {
             .append("input")
                 .attr("type", inputType)
     ;
+
+    if (header == "activity") {
+        controls.selectAll("label")
+            .on("mouseenter", function(d, i) {
+                var fieldName = d3.select(this).attr("data-field-name");
+                d3.selectAll("*[data-field-header='activity'][data-field-name='" + fieldName + "']")
+                    .attr("fill", "#ffff00")
+                    .style("background-color", "#ffff00")
+                ;
+            })
+            .on("mouseleave", function(d, i) {
+                var fieldName = d3.select(this).attr("data-field-name");
+                d3.selectAll("*[data-field-header='activity'][data-field-name='" + fieldName + "']")
+                    .attr("fill", function() {
+                        return d3.select(this).attr("data-fill");
+                    })
+                    .style("background-color", function() {
+                        return d3.select(this).attr("data-background-color");
+                    })
+                ;
+            })
+        ;
+    }
 }
 
 function initViewControls() {
@@ -199,9 +225,23 @@ function initData() {
     }
 }
 
+function getKeysForPies() {
+    var keys = [];
+
+    for (var i = 0; i < filter["year"].length; i++) {
+        var yearStr = filter["year"][i].toString();
+        if (data.hasOwnProperty(yearStr)) {
+            keys.push(yearStr);
+        }
+    }
+
+    return keys;
+}
+
 function drawPies() {
     // Clear the contents of the svg.
-    var numPies = Math.min(filter["year"].length, Object.keys(data).length);
+    var pieKeys = getKeysForPies();
+    var numPies = pieKeys.length;
     var rowLimit = 5;
     var numRows = Math.floor(numPies / (rowLimit + 1)) + 1;
 
@@ -233,10 +273,11 @@ function drawPies() {
 
     var piePaths = [];
 
-    for (var i = 0; i < numPies; i++) {
-        var datum = data[Object.keys(data)[i]];
+    for (var i = 0; i < pieKeys.length; i++) {
+        var pieKey = pieKeys[i];
+        var datum = data[pieKey];
         var translateX = ( radius * 2 * (i % rowLimit + 0.5) );
-        var year = parseInt(Object.keys(data)[i]);
+        var year = parseInt(pieKey);
 
         if (numPies == 1) {
             translateX += parseInt( visWrapper.style("height") ) / 2 - outerRadiusBase;
@@ -261,25 +302,51 @@ function drawPies() {
             .enter()
                 .append("g")
                     .attr("class", "slice")
+                .on("mouseenter", function(d, i) {
+                    var fieldName = Object.keys(fields["activity"][i])[0];
+                    d3.selectAll("*[data-field-header='activity'][data-field-name='" + fieldName + "']")
+                        .attr("fill", "#ffff00")
+                        .style("background-color", "#ffff00")
+                    ;
+                })
+                .on("mouseleave", function(d, i) {
+                    var fieldName = Object.keys(fields["activity"][i])[0];
+                    d3.selectAll("*[data-field-header='activity'][data-field-name='" + fieldName + "']")
+                        .attr("fill", function() {
+                            return d3.select(this).attr("data-fill");
+                        })
+                        .style("background-color", function() {
+                            return d3.select(this).attr("data-background-color");
+                        })
+                    ;
+                })
         ;
 
         pieGroup.append("path")
             .attr("fill", function(d, i) { return colors(i); })
+            .attr("data-fill", function(d, i) { return colors(i); })
             .attr("d", arc)
             .attr("data-year", year)
+            .attr("data-field-header", "activity")
+            .attr("data-field-name", function(d, i) {
+                return Object.keys(fields["activity"][i])[0];
+            })
             .each(function(d) {
                 this._current = d;
             }) // store the initial angles
         ;
 
         // Adapted from https://gist.github.com/enjalot/1203641
-        pieGroup.append("text").attr("transform", function(d) {
+        var textLabel = pieGroup.append("text").attr("transform", function(d) {
             d.innerRadius = 0;
             d.outerRadius = outerRadius;
-            return "translate(" + arc.centroid(d) + ") scale(0.75)";
+            return "translate(" + arc.centroid(d) + ") scale(" + radius / 250 + ")";
         })
         .attr("text-anchor", "middle")
         .text(function(d, i) { return d.value; });
+
+        var titleLabel = pieGroup.append("title")
+            .text(function(d, i) { return Object.keys(fields["activity"][i])[0] + ": " + d.value + " hours"; });
     }
 
     // $slider.on("slide", function() {

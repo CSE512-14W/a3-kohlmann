@@ -31,17 +31,17 @@
     ],
 
     "activity": [
-        { "personal":           "Personal care activities" },
-        { "eating":             "Eating and drinking" },
-        { "household":          "Household activities" },
-        { "purchasing":         "Purchasing goods and services" },
         { "caringhousehold":    "Caring for and helping household members" },
         { "caringnonhousehold": "Caring for and helping nonhousehold members" },
-        { "working":            "Working and work-related activities" },
+        { "eating":             "Eating and drinking" },
         { "educational":        "Educational activities" },
-        { "organizational":     "Organizational, civic, and religious activities" },
+        { "household":          "Household activities" },
         { "leisure":            "Leisure and sports" },
+        { "organizational":     "Organizational, civic, and religious activities" },
+        { "other":              "Other activities, not elsewhere classified" },
+        { "personal":           "Personal care activities" },
+        { "purchasing":         "Purchasing goods and services" },
         { "telephone":          "Telephone calls, mail, and e-mail" },
-        { "other":              "Other activities, not elsewhere classified" }
+        { "working":            "Working and work-related activities" }
     ]
 }
