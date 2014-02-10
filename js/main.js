@@ -10,14 +10,8 @@ var filter = {};
 var colors = d3.scale.category20();
 var debug = true;
 var visWrapper = d3.select(".visWrapper");
-var views = [
-    { "smallmultiples": "Small Multiples" },
-    { "areafill": "Area Fill" }
-];
-var currentView = 0;
 
 /* Load the data fields. This function kicks off everything else. */
-initViewControls();
 loadFields();
 
 /* End main function */
@@ -134,33 +128,6 @@ function initFieldControls(header, controls, values, btnClasses, inputType) {
     }
 }
 
-function initViewControls() {
-    var btnClasses = "btn btn-default";
-    var currentViewName = Object.keys(views[currentView])[0];
-    var controls = d3.select(".controls-view");
-    controls.selectAll("label")
-        .data(views)
-        .enter()
-        .append("label")
-            .text(function(d) { return d[Object.keys(d)[0]]; })
-            .attr("data-view", function(d) { return Object.keys(d)[0]; })
-            .attr("class", function(d) {
-                if (Object.keys(d)[0] == currentViewName) {
-                    return btnClasses + " active";
-                } else {
-                    return btnClasses;
-                }
-            })
-            .on("click", updateViews)
-            .append("input")
-                .attr("type", "radio")
-    ;
-}
-
-function updateViews() {
-    console.log("Updating views...");
-}
-
 function updateFiltersForYearSlider() {
     var value = $(this).slider('getValue');
     filter["year"] = Array.range(value[0], value[value.length - 1]);
@@ -217,12 +184,7 @@ function initData() {
         .attr("height", visWrapper.style("height"))
     ;
     // Draw pies.
-    var currentViewName = Object.keys(views[currentView])[0];
-    if (currentViewName == "smallmultiples") {
-        drawPies();
-    } else if (currentViewName == "areafill") {
-        drawAreaFills();
-    }
+    drawPies();
 }
 
 function getKeysForPies() {
@@ -239,6 +201,7 @@ function getKeysForPies() {
 }
 
 function drawPies() {
+    // Adapted from http://bl.ocks.org/mbostock/1346410
     // Clear the contents of the svg.
     var pieKeys = getKeysForPies();
     var numPies = pieKeys.length;
@@ -336,11 +299,16 @@ function drawPies() {
             }) // store the initial angles
         ;
 
+        var textLabelScale = 1.0;
+        if (numPies > 3) {
+            textLabelScale = 0.75;
+        }
+
         // Adapted from https://gist.github.com/enjalot/1203641
         var textLabel = pieGroup.append("text").attr("transform", function(d) {
             d.innerRadius = 0;
             d.outerRadius = outerRadius;
-            return "translate(" + arc.centroid(d) + ") scale(" + radius / 250 + ")";
+            return "translate(" + arc.centroid(d) + ") scale(" + textLabelScale + ")";
         })
         .attr("text-anchor", "middle")
         .text(function(d, i) { return d.value; });
@@ -348,21 +316,4 @@ function drawPies() {
         var titleLabel = pieGroup.append("title")
             .text(function(d, i) { return Object.keys(fields["activity"][i])[0] + ": " + d.value + " hours"; });
     }
-
-    // $slider.on("slide", function() {
-    //     d3.select("svg").selectAll("g").exit();
-    // });
 }
-
-// Store the displayed angles in _current.
-// Then, interpolate from _current to the new angles.
-// During the transition, _current is updated in-place by d3.interpolate.
-function arcTween(a) {
-    var i = d3.interpolate(this._current, a);
-    this._current = i(0);
-    return function(t) {
-        return arc(i(t));
-    };
-}
-
-/* End data functions */
