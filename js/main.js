@@ -105,6 +105,7 @@ function updateFiltersForYearSlider() {
     var value = $(this).slider('getValue');
     filter["year"] = Array.range(value[0], value[value.length - 1]);
     if (debug) console.log("New year range: " + value);
+    drawPie();
 }
 
 function updateFiltersForFieldControls(d, i) {
@@ -161,12 +162,13 @@ function initData() {
 function drawPie() {
     var numPies = Math.min(filter["year"].length, Object.keys(data).length);
     var rowLimit = 5;
+    var numRows = Math.floor(numPies / (rowLimit + 1)) + 1;
 
     var width = parseInt( visWrapper.style("width") ) / numPies;
     var height = parseInt( visWrapper.style("height") );
     if (numPies > rowLimit) {
         width = parseInt( visWrapper.style("width") ) / rowLimit;
-        height = parseInt( visWrapper.style("height") ) / 2;
+        height = parseInt( visWrapper.style("height") ) / numRows;
     }
     var radius = Math.min(width, height) / 2;
 
@@ -180,15 +182,25 @@ function drawPie() {
         })
         .sort(null);
 
+    var outerRadiusBase = 40;
+    var outerRadius = radius - outerRadiusBase * radius / parseInt( visWrapper.style("width") );
+
     var arc = d3.svg.arc()
         .innerRadius(radius * 2/5)
-        .outerRadius(radius - 40 * radius / parseInt( visWrapper.style("width") ) );
+        .outerRadius(outerRadius);
 
     for (var i = 0; i < numPies; i++) {
         var datum = data[Object.keys(data)[i]];
+        var translateX = ( radius * 2 * (i % rowLimit + 0.5) );
+        if (numPies == 1) {
+            translateX += parseInt( visWrapper.style("height") ) / 2 - outerRadiusBase;
+        }
+        var translateY = parseInt( visWrapper.style("height") ) / (numRows * 2) * Math.floor(i / rowLimit + 1) + (radius * Math.floor(i / rowLimit));
+        // translateY = translateY + (height - translateY);
+
         var path = svg
             .append("g")
-                .attr("transform", "translate(" + ( radius * 2 * (i % rowLimit + 0.5) ) + "," + radius * 2 * (Math.floor(i / rowLimit) + 0.5) + ")")
+                .attr("transform", "translate(" + translateX + "," + translateY + ")")
                 .datum(datum).selectAll("path")
                 .data(pie)
                 .enter()
@@ -198,6 +210,7 @@ function drawPie() {
                     .each(function(d) {
                         this._current = d;
                     }) // store the initial angles
+
         ;
     }
 }
