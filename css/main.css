@@ -15,8 +15,10 @@ body > .container {
 
 .visWrap {
     position: relative;
-    height: 0;
-    padding-bottom: 56.25%;
+    width: 877px;
+    height: 476px;
+    /*height: 0;*/
+    /*padding-bottom: 56.25%;*/
     transform-style: preserve-3d;
     background: #efefef;
 }
