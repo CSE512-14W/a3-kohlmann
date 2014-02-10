@@ -5,7 +5,7 @@
 var fieldsPath = "json/fields.json";
 var dataPath = "json/data.json";
 
-var fields, data, svg;
+var fields, data, svg, $slider;
 var filter = {};
 var colors = d3.scale.category20();
 var debug = true;
@@ -53,16 +53,17 @@ function initFields() {
 function initYearSliderControl(header, controls, values) {
     // Initialize a slider with jQuery.
     var slider = controls.append("input");
+    $slider = $(slider[0][0]);
     var min = parseInt( Object.keys(values[0])[0] );
     var max = parseInt( Object.keys(values[values.length - 1])[0] );
-    $(slider[0][0]).slider({
+    $slider.slider({
         min: min,
         max: max,
         value: [min, max],
         tooltip: "always"
     })
     // Event handling
-    $(slider[0][0]).on("slide", updateFiltersForYearSlider);
+    $slider.on("slide", updateFiltersForYearSlider);
     // Filter setup
     filter["year"] = Array.range(min, max);
 }
@@ -105,7 +106,6 @@ function updateFiltersForYearSlider() {
     var value = $(this).slider('getValue');
     filter["year"] = Array.range(value[0], value[value.length - 1]);
     if (debug) console.log("New year range: " + value);
-    drawPie();
 }
 
 function updateFiltersForFieldControls(d, i) {
@@ -133,7 +133,6 @@ function updateFiltersForFieldControls(d, i) {
             if (debug) console.log(header + " --> " + name + " already enabled.");
         }
     }
-    drawPie();
 };
 
 /* End field functions */
@@ -184,35 +183,53 @@ function drawPie() {
 
     var outerRadiusBase = 40;
     var outerRadius = radius - outerRadiusBase * radius / parseInt( visWrapper.style("width") );
+    var innerRadius = radius * 2/5;
 
     var arc = d3.svg.arc()
-        .innerRadius(radius * 2/5)
+        .innerRadius(innerRadius)
         .outerRadius(outerRadius);
+
+    var piePaths = [];
 
     for (var i = 0; i < numPies; i++) {
         var datum = data[Object.keys(data)[i]];
         var translateX = ( radius * 2 * (i % rowLimit + 0.5) );
+        var year = parseInt(Object.keys(data)[i]);
+
         if (numPies == 1) {
             translateX += parseInt( visWrapper.style("height") ) / 2 - outerRadiusBase;
         }
         var translateY = parseInt( visWrapper.style("height") ) / (numRows * 2) * Math.floor(i / rowLimit + 1) + (radius * Math.floor(i / rowLimit));
-        // translateY = translateY + (height - translateY);
 
         var path = svg
             .append("g")
                 .attr("transform", "translate(" + translateX + "," + translateY + ")")
-                .datum(datum).selectAll("path")
-                .data(pie)
-                .enter()
-                    .append("path")
-                    .attr("fill", function(d, i) { return colors(i); })
-                    .attr("d", arc)
-                    .each(function(d) {
-                        this._current = d;
-                    }) // store the initial angles
+        ;
+        // Add a text label
+        var text = path
+            .append("text")
+            .attr("text-anchor", "middle")
+            .text(year)
+            .attr("transform", "translate(0,6) scale(1.5)")
+        ;
 
+        var piePath = path
+            .datum(datum).selectAll("path")
+            .data(pie)
+            .enter()
+                .append("path")
+                .attr("fill", function(d, i) { return colors(i); })
+                .attr("d", arc)
+                .attr("data-year", year)
+                .each(function(d) {
+                    this._current = d;
+                }) // store the initial angles
         ;
     }
+
+    $slider.on("slide", function() {
+        d3.select("svg").selectAll("g").exit();
+    });
 }
 
 // Store the displayed angles in _current.
