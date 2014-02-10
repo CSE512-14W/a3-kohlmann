@@ -56,7 +56,7 @@ body > .container {
     width: 100%;
 }
 
-#filters .btn-group.gender .btn {
+#filters .btn-group.controls-gender .btn {
     width: 33.333333333333333333333%;
 }
 
@@ -64,7 +64,7 @@ body > .container {
     text-align: left;
 }
 
-.btn-group-vertical.categories .btn.btn-xs {
+.btn-group-vertical.controls-activity .btn.btn-xs {
     padding-top: 5px;
     padding-bottom: 5px;
 }
