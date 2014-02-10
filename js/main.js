@@ -10,8 +10,14 @@ var filter = {};
 var colors = d3.scale.category20();
 var debug = true;
 var visWrapper = d3.select(".visWrapper");
+var views = [
+    { "smallmultiples": "Small Multiples" },
+    { "areafill": "Area Fill" }
+];
+var currentView = 0;
 
 /* Load the data fields. This function kicks off everything else. */
+initViewControls();
 loadFields();
 
 /* End main function */
@@ -102,10 +108,38 @@ function initFieldControls(header, controls, values, btnClasses, inputType) {
     ;
 }
 
+function initViewControls() {
+    var btnClasses = "btn btn-default";
+    var currentViewName = Object.keys(views[currentView])[0];
+    var controls = d3.select(".controls-view");
+    controls.selectAll("label")
+        .data(views)
+        .enter()
+        .append("label")
+            .text(function(d) { return d[Object.keys(d)[0]]; })
+            .attr("data-view", function(d) { return Object.keys(d)[0]; })
+            .attr("class", function(d) {
+                if (Object.keys(d)[0] == currentViewName) {
+                    return btnClasses + " active";
+                } else {
+                    return btnClasses;
+                }
+            })
+            .on("click", updateViews)
+            .append("input")
+                .attr("type", "radio")
+    ;
+}
+
+function updateViews() {
+    console.log("Updating views...");
+}
+
 function updateFiltersForYearSlider() {
     var value = $(this).slider('getValue');
     filter["year"] = Array.range(value[0], value[value.length - 1]);
     if (debug) console.log("New year range: " + value);
+    initData();
 }
 
 function updateFiltersForFieldControls(d, i) {
@@ -133,6 +167,7 @@ function updateFiltersForFieldControls(d, i) {
             if (debug) console.log(header + " --> " + name + " already enabled.");
         }
     }
+    initData();
 };
 
 /* End field functions */
@@ -149,16 +184,23 @@ function loadData() {
 
 function initData() {
     /* By now we should have the fields and filter all set up and ready to go. */
+    visWrapper.select("svg").remove();
     // Initialize the svg container.
     svg = visWrapper.append("svg")
         .attr("width", visWrapper.style("width"))
         .attr("height", visWrapper.style("height"))
     ;
     // Draw pies.
-    drawPie();
+    var currentViewName = Object.keys(views[currentView])[0];
+    if (currentViewName == "smallmultiples") {
+        drawPies();
+    } else if (currentViewName == "areafill") {
+        drawAreaFills();
+    }
 }
 
-function drawPie() {
+function drawPies() {
+    // Clear the contents of the svg.
     var numPies = Math.min(filter["year"].length, Object.keys(data).length);
     var rowLimit = 5;
     var numRows = Math.floor(numPies / (rowLimit + 1)) + 1;
@@ -174,7 +216,7 @@ function drawPie() {
     var pie = d3.layout.pie()
         .value(function(d, i) {
             if (filter["activity"].indexOf(i) > -1) {
-                return d["both"]["weekdays"];
+                return d[filter["gender"][0]][filter["timeofweek"][0]];
             } else {
                 return 0; 
             }
@@ -213,23 +255,36 @@ function drawPie() {
             .attr("transform", "translate(0,6) scale(1.5)")
         ;
 
-        var piePath = path
+        var pieGroup = path
             .datum(datum).selectAll("path")
             .data(pie)
             .enter()
-                .append("path")
-                .attr("fill", function(d, i) { return colors(i); })
-                .attr("d", arc)
-                .attr("data-year", year)
-                .each(function(d) {
-                    this._current = d;
-                }) // store the initial angles
+                .append("g")
+                    .attr("class", "slice")
         ;
+
+        pieGroup.append("path")
+            .attr("fill", function(d, i) { return colors(i); })
+            .attr("d", arc)
+            .attr("data-year", year)
+            .each(function(d) {
+                this._current = d;
+            }) // store the initial angles
+        ;
+
+        // Adapted from https://gist.github.com/enjalot/1203641
+        pieGroup.append("text").attr("transform", function(d) {
+            d.innerRadius = 0;
+            d.outerRadius = outerRadius;
+            return "translate(" + arc.centroid(d) + ") scale(0.75)";
+        })
+        .attr("text-anchor", "middle")
+        .text(function(d, i) { return d.value; });
     }
 
-    $slider.on("slide", function() {
-        d3.select("svg").selectAll("g").exit();
-    });
+    // $slider.on("slide", function() {
+    //     d3.select("svg").selectAll("g").exit();
+    // });
 }
 
 // Store the displayed angles in _current.
