@@ -58,6 +58,10 @@ body > .container {
     width: 100%;
 }
 
+#filters .btn-group.controls-view .btn {
+    width: 50%;
+}
+
 #filters .btn-group.controls-gender .btn {
     width: 33.333333333333333333333%;
 }
