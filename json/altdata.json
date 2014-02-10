@@ -1,0 +1,16 @@
+{
+	"data": [
+		{
+			"apples": 9.24,
+			"oranges": 2.35
+		},
+		{
+			"apples": 2.45,
+			"oranges": 1.35
+		},
+		{
+			"apples": 8.45,
+			"oranges": 1.35
+		}
+	]
+}

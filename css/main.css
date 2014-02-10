@@ -13,7 +13,7 @@ body > .container {
     perspective-origin: 50% 100px;
 }
 
-.visWrap {
+.visWrapper {
     position: relative;
     width: 877px;
     height: 476px;
@@ -69,4 +69,15 @@ body > .container {
 .btn-group-vertical.controls-activity .btn.btn-xs {
     padding-top: 5px;
     padding-bottom: 5px;
+}
+
+.btn[style].active {
+    /*background-color: #ffffff;*/
+    background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.25)), to(rgba(255, 255, 255, 0.50)));
+    background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.50));
+    background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.50));
+    background-image: -o-linear-gradient(top, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.50));
+    background-image: -ms-linear-gradient(top, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.50));
+    background-image: linear-gradient(top, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.50));
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0,StartColorStr='#ffffff', EndColorStr='#ffffff');
 }

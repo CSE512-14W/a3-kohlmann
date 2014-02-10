@@ -1,76 +1,30 @@
-// Array Remove - By John Resig (MIT Licensed)
-Array.prototype.remove = function(from, to) {
-    var rest = this.slice((to || from) + 1 || this.length);
-    this.length = from < 0 ? this.length + from : from;
-    return this.push.apply(this, rest);
-};
-
-// http://stackoverflow.com/a/3895521
-Array.range = function(start, end, step) {
-    var range = [];
-    var typeofStart = typeof start;
-    var typeofEnd = typeof end;
-
-    if (step === 0) {
-        throw TypeError("Step cannot be zero.");
-    }
-
-    if (typeofStart == "undefined" || typeofEnd == "undefined") {
-        throw TypeError("Must pass start and end arguments.");
-    } else if (typeofStart != typeofEnd) {
-        throw TypeError("Start and end arguments must be of same type.");
-    }
-
-    typeof step == "undefined" && (step = 1);
-
-    if (end < start) {
-        step = -step;
-    }
-
-    if (typeofStart == "number") {
-
-        while (step > 0 ? end >= start : end <= start) {
-            range.push(start);
-            start += step;
-        }
-
-    } else if (typeofStart == "string") {
-
-        if (start.length != 1 || end.length != 1) {
-            throw TypeError("Only strings with one character are supported.");
-        }
-
-        start = start.charCodeAt(0);
-        end = end.charCodeAt(0);
-
-        while (step > 0 ? end >= start : end <= start) {
-            range.push(String.fromCharCode(start));
-            start += step;
-        }
-
-    } else {
-        throw TypeError("Only string and number types are supported");
-    }
-
-    return range;
-
-}
+/* Begin main function */
 
 // (function() {
 
-    /* Load Field Names and Data */
-var fields, data;
+var fieldsPath = "json/fields.json";
+var dataPath = "json/data.json";
+
+var fields, data, svg;
 var filter = {};
 var colors = d3.scale.category20();
 var debug = true;
+var visWrapper = d3.select(".visWrapper");
 
-d3.json("json/fields.json", function(error, json) {
-    if (error) return console.warn(error);
-    fields = json;
-    initFields();
-});
+/* Load the data fields. This function kicks off everything else. */
+loadFields();
 
-// }());
+/* End main function */
+
+/* Begin field functions */
+
+function loadFields() {
+    d3.json(fieldsPath, function(error, json) {
+        if (error) return console.warn(error);
+        fields = json;
+        initFields();
+    });
+}
 
 function initFields() {
     // Initialize controls for each field
@@ -92,6 +46,8 @@ function initFields() {
             initFieldControls(header, controls, values, btnClasses, inputType);
         }
     }
+    /* Somewhat lamely, we're going to wait to load data until after setting up all the fields. */
+    loadData();
 }
 
 function initYearSliderControl(header, controls, values) {
@@ -129,6 +85,9 @@ function initFieldControls(header, controls, values, btnClasses, inputType) {
                     return btnClasses;
                 }
             })
+            .style("background-color", function(d,i) {
+                if (header == "activity") return colors(i);
+            })
             .attr("data-field-header", header)
             .attr("data-field-name", function(d) {
                 return Object.keys(d)[0];
@@ -153,14 +112,17 @@ function updateFiltersForFieldControls(d, i) {
     var header = d3.select(this).attr("data-field-header");
     var name = d3.select(this).attr("data-field-name");
     var indexOfField = filter[header].indexOf(i);
+    var that = d3.select(this);
     // Enable this field
-    if (d3.select(this).select("input").attr("type") == "checkbox") {
+    if (that.select("input").attr("type") == "checkbox") {
         if (indexOfField == -1) {
             filter[header].push(i);
             if (debug) console.log("Enabled " + header + " --> " + name);
+            that.style("background-color", colors(i));
         } else {
             filter[header].remove(indexOfField, indexOfField);
             if (debug) console.log("Disabled " + header + " --> " + name);
+            that.style("background-color", null);
         }
     } else {
         if (indexOfField == -1) {
@@ -170,4 +132,85 @@ function updateFiltersForFieldControls(d, i) {
             if (debug) console.log(header + " --> " + name + " already enabled.");
         }
     }
+    drawPie();
 };
+
+/* End field functions */
+
+/* Begin data functions */
+
+function loadData() {
+    d3.json(dataPath, function(error, json) {
+        if (error) return console.warn(error);
+        data = json;
+        initData();
+    });
+}
+
+function initData() {
+    /* By now we should have the fields and filter all set up and ready to go. */
+    // Initialize the svg container.
+    svg = visWrapper.append("svg")
+        .attr("width", visWrapper.style("width"))
+        .attr("height", visWrapper.style("height"))
+    ;
+    // Draw pies.
+    drawPie();
+}
+
+function drawPie() {
+    var numPies = Math.min(filter["year"].length, Object.keys(data).length);
+    var rowLimit = 5;
+
+    var width = parseInt( visWrapper.style("width") ) / numPies;
+    var height = parseInt( visWrapper.style("height") );
+    if (numPies > rowLimit) {
+        width = parseInt( visWrapper.style("width") ) / rowLimit;
+        height = parseInt( visWrapper.style("height") ) / 2;
+    }
+    var radius = Math.min(width, height) / 2;
+
+    var pie = d3.layout.pie()
+        .value(function(d, i) {
+            if (filter["activity"].indexOf(i) > -1) {
+                return d["both"]["weekdays"];
+            } else {
+                return 0; 
+            }
+        })
+        .sort(null);
+
+    var arc = d3.svg.arc()
+        .innerRadius(radius * 2/5)
+        .outerRadius(radius - 40 * radius / parseInt( visWrapper.style("width") ) );
+
+    for (var i = 0; i < numPies; i++) {
+        var datum = data[Object.keys(data)[i]];
+        var path = svg
+            .append("g")
+                .attr("transform", "translate(" + ( radius * 2 * (i % rowLimit + 0.5) ) + "," + radius * 2 * (Math.floor(i / rowLimit) + 0.5) + ")")
+                .datum(datum).selectAll("path")
+                .data(pie)
+                .enter()
+                    .append("path")
+                    .attr("fill", function(d, i) { return colors(i); })
+                    .attr("d", arc)
+                    .each(function(d) {
+                        this._current = d;
+                    }) // store the initial angles
+        ;
+    }
+}
+
+// Store the displayed angles in _current.
+// Then, interpolate from _current to the new angles.
+// During the transition, _current is updated in-place by d3.interpolate.
+function arcTween(a) {
+    var i = d3.interpolate(this._current, a);
+    this._current = i(0);
+    return function(t) {
+        return arc(i(t));
+    };
+}
+
+/* End data functions */
