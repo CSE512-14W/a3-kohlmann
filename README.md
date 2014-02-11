@@ -37,3 +37,22 @@ I spent approximately 10-12 hours developing TimeLoaf. Regrettably, far too much
 I also spent an obnoxious amount of time connecting the user interface controls with the underlying state information necessary to modify the visualization display. This experience has unequivocally compelled me to utilize a JavaScript MVC frameworks such as Backbone.js for my next project, having experimented with them in the past.
 
 Finally, I obviously was unable to implement the more sophisticated transformations described above and in my storyboard sketches. I still believe that a system supporting multiple visualizations of time-delimited data (other than video, given my inspiration from Final Cut Pro X) has potential. I was unable to implement those ideas here. However, the small multiples visualization implemented affords, at least, functional cross-year comparisons, with synchronized brushing further aiding that goal.
+
+## Third-Party Code
+
+TimeLoaf uses the following third-party code.
+
+* [HTML5 Boilerplate](http://html5boilerplate.com)
+* [Bootstrap](http://getbootstrap.com)
+* [jQuery](http://jquery.com)
+* [D3](http://d3js.org)
+* [bootstrap-slider](https://github.com/seiyria/bootstrap-slider)
+* [John Resig's Array Remove](http://ejohn.org/blog/javascript-array-remove/)
+* [Array.range Code Snippet](http://stackoverflow.com/a/3895521)
+
+## Code References
+
+Code in TimeLoaf was built using the following code examples as a guide.
+
+* [D3 Pie Chart Text Labels Example](https://gist.github.com/enjalot/1203641)
+* [Pie Chart Update, II](http://bl.ocks.org/mbostock/1346410)
